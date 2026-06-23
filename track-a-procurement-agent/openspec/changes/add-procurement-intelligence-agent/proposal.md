@@ -19,6 +19,7 @@ This capstone change is intentionally limited to domain validation, tool orchest
 
 ### New Capabilities
 - `procurement-intelligence-agent`: Pre-screen purchase requests using validated inputs, tool-driven policy checks, and structured recommendation outputs.
+- `budget-tool`: Evaluate cost center budget sufficiency and return structured deny/approve signals with overage details.
 - `vendor-duplication-tool`: Evaluate active-contract duplication conflicts by vendor and category with POL-001 deny-threshold awareness.
 - `policy-compliance-tool`: Evaluate purchase requests against all eight policies and emit structured violation records with forced decisions.
 - `risk-assessment-tool`: Produce vendor risk profile with compliance status, contract status, and computed risk level.
