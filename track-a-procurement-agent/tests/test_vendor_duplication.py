@@ -2,8 +2,8 @@
 
 import pytest
 
+import data.loader as data_loader
 from tools.vendor_duplication import check_vendor_duplication
-import tools.vendor_duplication as vendor_duplication_tool
 
 
 def test_req_008_novaprint_conflicts_with_active_office_supply_vendors() -> None:
@@ -48,7 +48,7 @@ def test_vendor_duplication_handles_data_unavailable(
     def _raise_loader_error() -> list[object]:
         raise FileNotFoundError("vendors.json missing")
 
-    monkeypatch.setattr(vendor_duplication_tool, "load_vendors", _raise_loader_error)
+    monkeypatch.setattr(data_loader, "load_vendors", _raise_loader_error)
 
     result = check_vendor_duplication("V-012", "office_supplies", 28500.0)
 

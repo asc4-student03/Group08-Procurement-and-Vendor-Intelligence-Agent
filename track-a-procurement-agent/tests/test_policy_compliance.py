@@ -2,9 +2,9 @@
 
 import pytest
 
+import data.loader as data_loader
 from models import PurchaseRequest
 from tools.policy_compliance import check_policy_compliance
-import tools.policy_compliance as policy_tool
 
 
 def test_pol_004_catering_prohibition_deny() -> None:
@@ -128,7 +128,7 @@ def test_policy_compliance_handles_data_unavailable(
     def _raise_loader_error() -> list[object]:
         raise FileNotFoundError("policies.json missing")
 
-    monkeypatch.setattr(policy_tool, "load_policies", _raise_loader_error)
+    monkeypatch.setattr(data_loader, "load_policies", _raise_loader_error)
 
     request = PurchaseRequest(
         request_id="REQ-001",

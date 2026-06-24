@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from data.loader import load_budgets
+from data import loader
 
 
 def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, object]:
@@ -28,7 +28,27 @@ def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, obje
     requested = float(requested_amount)
 
     try:
-        budgets = load_budgets()
+        budgets = loader.load_budgets()
+    except FileNotFoundError as exc:
+        return {
+            "within_budget": False,
+            "cost_center_id": cost_center_id,
+            "remaining_budget": 0.0,
+            "requested_amount": requested,
+            "overage": max(0.0, requested),
+            "error": f"Budget data file not found: {exc}",
+            "error_type": "FileNotFoundError",
+        }
+    except KeyError as exc:
+        return {
+            "within_budget": False,
+            "cost_center_id": cost_center_id,
+            "remaining_budget": 0.0,
+            "requested_amount": requested,
+            "overage": max(0.0, requested),
+            "error": f"Budget data missing expected key: {exc}",
+            "error_type": "KeyError",
+        }
     except Exception as exc:
         return {
             "within_budget": False,
@@ -37,6 +57,7 @@ def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, obje
             "requested_amount": requested,
             "overage": max(0.0, requested),
             "error": f"Budget data could not be loaded: {exc}",
+            "error_type": type(exc).__name__,
         }
 
     budget_record = next(

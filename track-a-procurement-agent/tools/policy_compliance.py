@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from data.loader import load_budgets, load_policies, load_vendors
+from data import loader
 from models import PurchaseRequest
 
 
@@ -29,11 +29,22 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
     }
 
     try:
-        policies = load_policies()
-        vendors = load_vendors()
-        budgets = load_budgets()
+        policies = loader.load_policies()
+        vendors = loader.load_vendors()
+        budgets = loader.load_budgets()
+    except FileNotFoundError as exc:
+        result["error"] = f"Policy evaluation data file not found: {exc}"
+        result["error_type"] = "FileNotFoundError"
+        result["highest_severity"] = "escalate"
+        return result
+    except KeyError as exc:
+        result["error"] = f"Policy evaluation data missing expected key: {exc}"
+        result["error_type"] = "KeyError"
+        result["highest_severity"] = "escalate"
+        return result
     except Exception as exc:
         result["error"] = f"Policy evaluation data unavailable: {exc}"
+        result["error_type"] = type(exc).__name__
         result["highest_severity"] = "escalate"
         return result
 
