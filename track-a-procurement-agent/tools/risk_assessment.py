@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from data.loader import load_vendors
+from data import loader
 
 
 def assess_risk(vendor_id: str) -> dict[str, object]:
@@ -15,7 +15,29 @@ def assess_risk(vendor_id: str) -> dict[str, object]:
         Structured risk payload with risk level and optional error context.
     """
     try:
-        vendors = load_vendors()
+        vendors = loader.load_vendors()
+    except FileNotFoundError as exc:
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": "Unknown",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+            "risk_summary": "Vendor data unavailable; escalate for manual review.",
+            "error": f"Vendor data file not found: {exc}",
+            "error_type": "FileNotFoundError",
+        }
+    except KeyError as exc:
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": "Unknown",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+            "risk_summary": "Vendor data unavailable; escalate for manual review.",
+            "error": f"Vendor data missing expected key: {exc}",
+            "error_type": "KeyError",
+        }
     except Exception as exc:
         return {
             "vendor_id": vendor_id,
@@ -25,6 +47,7 @@ def assess_risk(vendor_id: str) -> dict[str, object]:
             "risk_level": "critical",
             "risk_summary": "Vendor data unavailable; escalate for manual review.",
             "error": f"Vendor data could not be loaded: {exc}",
+            "error_type": type(exc).__name__,
         }
 
     vendor = next(

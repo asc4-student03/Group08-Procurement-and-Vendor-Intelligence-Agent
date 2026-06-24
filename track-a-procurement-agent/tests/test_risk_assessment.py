@@ -2,8 +2,8 @@
 
 import pytest
 
+import data.loader as data_loader
 from tools.risk_assessment import assess_risk
-import tools.risk_assessment as risk_tool
 
 
 def test_assess_risk_compliance_flagged_vendor_is_critical() -> None:
@@ -57,7 +57,7 @@ def test_assess_risk_handles_data_unavailable(monkeypatch: pytest.MonkeyPatch) -
     def _raise_loader_error() -> list[object]:
         raise FileNotFoundError("vendors.json missing")
 
-    monkeypatch.setattr(risk_tool, "load_vendors", _raise_loader_error)
+    monkeypatch.setattr(data_loader, "load_vendors", _raise_loader_error)
 
     result = assess_risk("V-002")
 

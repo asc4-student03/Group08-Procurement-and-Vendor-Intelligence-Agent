@@ -2,8 +2,8 @@
 
 import pytest
 
+import data.loader as data_loader
 from tools.budget import check_budget
-import tools.budget as budget_tool
 
 
 def test_check_budget_within_and_exceeding_for_cc003() -> None:
@@ -42,7 +42,7 @@ def test_check_budget_handles_data_unavailable(monkeypatch: pytest.MonkeyPatch) 
     def _raise_loader_error() -> list[object]:
         raise FileNotFoundError("budgets.json missing")
 
-    monkeypatch.setattr(budget_tool, "load_budgets", _raise_loader_error)
+    monkeypatch.setattr(data_loader, "load_budgets", _raise_loader_error)
 
     result = check_budget("CC-003", 100.0)
 

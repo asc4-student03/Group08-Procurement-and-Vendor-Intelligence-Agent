@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from data.loader import load_vendors
+from data import loader
 
 
 POL_001_THRESHOLD = 25_000.0
@@ -45,10 +45,21 @@ def check_vendor_duplication(vendor_id: str, category: str, amount: float) -> di
     }
 
     try:
-        vendors = load_vendors()
+        vendors = loader.load_vendors()
+    except FileNotFoundError as exc:
+        result["reason"] = "Vendor duplication could not be evaluated."
+        result["error"] = f"Vendor data file not found: {exc}"
+        result["error_type"] = "FileNotFoundError"
+        return result
+    except KeyError as exc:
+        result["reason"] = "Vendor duplication could not be evaluated."
+        result["error"] = f"Vendor data missing expected key: {exc}"
+        result["error_type"] = "KeyError"
+        return result
     except Exception as exc:
         result["reason"] = "Vendor duplication could not be evaluated."
         result["error"] = f"Vendor data unavailable: {exc}"
+        result["error_type"] = type(exc).__name__
         return result
 
     if request_amount <= POL_001_THRESHOLD:
