@@ -31,6 +31,7 @@ def test_policy_compliance_pol_004_catering_prohibition() -> None:
 
     assert pol_004
     assert pol_004[0]["forced_decision"] == "deny"
+    assert "violated_rule" in pol_004[0]
 
 
 def test_policy_compliance_pol_002_manager_threshold() -> None:

@@ -3,7 +3,16 @@
 from __future__ import annotations
 
 from models import PurchaseRequest
-from data.loader import load_budgets, load_policies, load_vendors
+from data import loader
+
+
+def _typed_error(error: Exception, stage: str) -> dict[str, str]:
+    """Build a consistent typed error payload for tool responses."""
+    return {
+        "type": type(error).__name__,
+        "message": str(error),
+        "stage": stage,
+    }
 
 
 def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
@@ -24,19 +33,41 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         - error: Optional error message when source data cannot be loaded
     """
     try:
-        policies = load_policies()
-        vendors = load_vendors()
-        budgets = load_budgets()
-    except (FileNotFoundError, TypeError) as exc:
+        policies = loader.load_policies()
+        vendors = loader.load_vendors()
+        budgets = loader.load_budgets()
+    except FileNotFoundError as exc:
         return {
             "signal": "escalate",
-            "summary": "Policy data unavailable; escalate for manual review.",
+            "summary": "Policy data file missing; escalate for manual review.",
             "details": {
                 "violations": [],
                 "evaluated_policy_ids": [],
                 "violation_count": 0,
             },
-            "error": str(exc),
+            "error": _typed_error(exc, "data_load"),
+        }
+    except KeyError as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Policy data missing required fields; escalate for manual review.",
+            "details": {
+                "violations": [],
+                "evaluated_policy_ids": [],
+                "violation_count": 0,
+            },
+            "error": _typed_error(exc, "data_shape"),
+        }
+    except Exception as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Unexpected policy compliance failure; escalate for manual review.",
+            "details": {
+                "violations": [],
+                "evaluated_policy_ids": [],
+                "violation_count": 0,
+            },
+            "error": _typed_error(exc, "unexpected"),
         }
 
     vendor = next((v for v in vendors if v.get("vendor_id") == request.vendor_id), None)
@@ -70,7 +101,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-001",
-                "rule_description": (
+                "violated_rule": (
                     "Amount exceeds single-source threshold and selected vendor is not an "
                     "active contracted vendor in this category."
                 ),
@@ -85,7 +116,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-002",
-                "rule_description": (
+                "violated_rule": (
                     "Amount is in manager-approval range and requires documented manager "
                     "approval before processing."
                 ),
@@ -99,7 +130,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-003",
-                "rule_description": (
+                "violated_rule": (
                     "Amount meets or exceeds director approval threshold and requires "
                     "director-level review."
                 ),
@@ -112,7 +143,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-004",
-                "rule_description": (
+                "violated_rule": (
                     "Catering purchases are prohibited under current spend reduction policy."
                 ),
                 "forced_decision": "deny",
@@ -124,7 +155,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-005",
-                "rule_description": "Vendor contract is expired and purchases cannot proceed.",
+                "violated_rule": "Vendor contract is expired and purchases cannot proceed.",
                 "forced_decision": "deny",
             }
         )
@@ -134,7 +165,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-006",
-                "rule_description": (
+                "violated_rule": (
                     "Vendor has an active compliance flag and requires Legal/Compliance "
                     "escalation."
                 ),
@@ -151,7 +182,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-007",
-                "rule_description": (
+                "violated_rule": (
                     "Staffing engagements above 40 hours require an active enterprise "
                     "staffing contract."
                 ),
@@ -165,7 +196,7 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         violations.append(
             {
                 "policy_id": "POL-008",
-                "rule_description": (
+                "violated_rule": (
                     "Request would exceed remaining quarterly budget for the cost center."
                 ),
                 "forced_decision": "deny",

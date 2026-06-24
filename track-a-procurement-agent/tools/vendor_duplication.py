@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from data.loader import load_policies, load_vendors
+from data import loader
+
+
+def _typed_error(error: Exception, stage: str) -> dict[str, str]:
+    """Build a consistent typed error payload for tool responses."""
+    return {
+        "type": type(error).__name__,
+        "message": str(error),
+        "stage": stage,
+    }
 
 
 def check_vendor_duplication(
@@ -32,12 +41,12 @@ def check_vendor_duplication(
         - selected vendor is not an active contracted vendor in the category
     """
     try:
-        vendors = load_vendors()
-        policies = load_policies()
-    except (FileNotFoundError, TypeError) as exc:
+        vendors = loader.load_vendors()
+        policies = loader.load_policies()
+    except FileNotFoundError as exc:
         return {
             "signal": "escalate",
-            "summary": "Vendor or policy data unavailable; escalate for manual review.",
+            "summary": "Vendor or policy data file missing; escalate for manual review.",
             "details": {
                 "input_vendor_id": vendor_id,
                 "category": category,
@@ -47,7 +56,37 @@ def check_vendor_duplication(
                 "conflicting_vendor_ids": [],
                 "conflicts": [],
             },
-            "error": str(exc),
+            "error": _typed_error(exc, "data_load"),
+        }
+    except KeyError as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Vendor or policy data missing required fields; escalate for manual review.",
+            "details": {
+                "input_vendor_id": vendor_id,
+                "category": category,
+                "requested_amount": float(requested_amount),
+                "pol_001_threshold": 25000.0,
+                "category_in_pol_001_scope": False,
+                "conflicting_vendor_ids": [],
+                "conflicts": [],
+            },
+            "error": _typed_error(exc, "data_shape"),
+        }
+    except Exception as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Unexpected vendor duplication check failure; escalate for manual review.",
+            "details": {
+                "input_vendor_id": vendor_id,
+                "category": category,
+                "requested_amount": float(requested_amount),
+                "pol_001_threshold": 25000.0,
+                "category_in_pol_001_scope": False,
+                "conflicting_vendor_ids": [],
+                "conflicts": [],
+            },
+            "error": _typed_error(exc, "unexpected"),
         }
 
     vendor_record = next((item for item in vendors if item.get("vendor_id") == vendor_id), None)
@@ -64,7 +103,11 @@ def check_vendor_duplication(
                 "conflicting_vendor_ids": [],
                 "conflicts": [],
             },
-            "error": f"Unknown vendor_id: {vendor_id}",
+            "error": {
+                "type": "ReferenceDataError",
+                "message": f"Unknown vendor_id: {vendor_id}",
+                "stage": "lookup",
+            },
         }
 
     if vendor_record.get("category") != category:
@@ -80,7 +123,11 @@ def check_vendor_duplication(
                 "conflicting_vendor_ids": [],
                 "conflicts": [],
             },
-            "error": "Input category does not match vendor category.",
+            "error": {
+                "type": "ValidationError",
+                "message": "Input category does not match vendor category.",
+                "stage": "validation",
+            },
         }
 
     pol_001 = next((item for item in policies if item.get("policy_id") == "POL-001"), None)

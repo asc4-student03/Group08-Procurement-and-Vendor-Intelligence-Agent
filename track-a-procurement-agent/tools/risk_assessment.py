@@ -1,106 +1,105 @@
-"""Risk assessment tool for procurement request pre-screening."""
+"""Risk assessment tool for vendor profile evaluation."""
 
 from __future__ import annotations
 
-from data.loader import load_vendors
+from data import loader
 
 
-def assess_risk(
-    vendor_id: str,
-    category: str,
-    requested_amount: float,
-    cost_center_id: str,
-) -> dict[str, object]:
-    """Assess vendor risk and return a standard tool payload.
+def _typed_error(error: Exception, stage: str) -> dict[str, str]:
+    """Build a consistent typed error payload for tool responses."""
+    return {
+        "type": type(error).__name__,
+        "message": str(error),
+        "stage": stage,
+    }
+
+
+def assess_risk(vendor_id: str) -> dict[str, object]:
+    """Return vendor compliance and contract-based risk profile.
 
     Args:
         vendor_id: Vendor identifier from the purchase request.
-        category: Purchase category from the purchase request.
-        requested_amount: Request total amount in USD.
-        cost_center_id: Cost center identifier from the purchase request.
 
     Returns:
-        A standard tool payload:
-        {
-          "signal": "approve|deny|escalate",
-          "summary": str,
-          "details": {
-            "vendor_id": str,
-            "category": str,
-            "requested_amount": float,
-            "cost_center_id": str,
-            "contract_status": str,
-            "compliance_flag": bool,
-            "risk_level": "low|medium|high|critical"
-          }
-        }
-        If data lookup fails, includes an additional "error" key.
+        A structured profile with keys:
+        - vendor_id
+        - vendor_name
+        - compliance_flag
+        - contract_status
+        - risk_level (low|medium|high|critical)
+        - risk_summary
+        - error (optional)
     """
     try:
-        vendors = load_vendors()
-    except (FileNotFoundError, TypeError) as exc:
+        vendors = loader.load_vendors()
+    except FileNotFoundError as exc:
         return {
-            "signal": "escalate",
-            "summary": "Vendor risk data unavailable; escalate for manual review.",
-            "details": {
-                "vendor_id": vendor_id,
-                "category": category,
-                "requested_amount": float(requested_amount),
-                "cost_center_id": cost_center_id,
-                "contract_status": "unknown",
-                "compliance_flag": False,
-                "risk_level": "critical",
-            },
-            "error": str(exc),
+            "vendor_id": vendor_id,
+            "vendor_name": "Unknown",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+            "risk_summary": "Vendor data file missing; escalate for manual review.",
+            "error": _typed_error(exc, "data_load"),
+        }
+    except KeyError as exc:
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": "Unknown",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+            "risk_summary": "Vendor data missing required fields; escalate for manual review.",
+            "error": _typed_error(exc, "data_shape"),
+        }
+    except Exception as exc:
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": "Unknown",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+            "risk_summary": "Unexpected risk assessment failure; escalate for manual review.",
+            "error": _typed_error(exc, "unexpected"),
         }
 
     vendor = next((item for item in vendors if item.get("vendor_id") == vendor_id), None)
     if vendor is None:
         return {
-            "signal": "escalate",
-            "summary": "Vendor not found in records; escalate for manual review.",
-            "details": {
-                "vendor_id": vendor_id,
-                "category": category,
-                "requested_amount": float(requested_amount),
-                "cost_center_id": cost_center_id,
-                "contract_status": "unknown",
-                "compliance_flag": False,
-                "risk_level": "critical",
+            "vendor_id": vendor_id,
+            "vendor_name": "Unknown",
+            "compliance_flag": False,
+            "contract_status": "unknown",
+            "risk_level": "critical",
+            "risk_summary": "Vendor not found in records; escalate for manual review.",
+            "error": {
+                "type": "ReferenceDataError",
+                "message": f"Unknown vendor_id: {vendor_id}",
+                "stage": "lookup",
             },
-            "error": f"Unknown vendor_id: {vendor_id}",
         }
 
     compliance_flag = bool(vendor.get("compliance_flag", False))
-    contract_status = str(vendor.get("contract_status", "none"))
+    contract_status = str(vendor.get("contract_status", "unknown"))
 
     if compliance_flag:
         risk_level = "critical"
-        signal = "escalate"
-        summary = "Vendor has active compliance flag; escalation required."
+        risk_summary = "Vendor has active compliance flag; escalation required."
     elif contract_status == "expired":
         risk_level = "high"
-        signal = "deny"
-        summary = "Vendor contract is expired and presents high procurement risk."
+        risk_summary = "Vendor contract is expired and presents high procurement risk."
     elif contract_status == "none":
         risk_level = "medium"
-        signal = "approve"
-        summary = "Vendor has no active contract; medium risk profile."
+        risk_summary = "Vendor has no active contract; medium risk profile."
     else:
         risk_level = "low"
-        signal = "approve"
-        summary = "Vendor has active contract and no compliance flags."
+        risk_summary = "Vendor has active contract and no compliance flags."
 
     return {
-        "signal": signal,
-        "summary": summary,
-        "details": {
-            "vendor_id": vendor_id,
-            "category": category,
-            "requested_amount": float(requested_amount),
-            "cost_center_id": cost_center_id,
-            "contract_status": contract_status,
-            "compliance_flag": compliance_flag,
-            "risk_level": risk_level,
-        },
+        "vendor_id": vendor_id,
+        "vendor_name": str(vendor.get("name", "Unknown")),
+        "compliance_flag": compliance_flag,
+        "contract_status": contract_status,
+        "risk_level": risk_level,
+        "risk_summary": risk_summary,
     }

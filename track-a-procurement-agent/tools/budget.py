@@ -2,7 +2,16 @@
 
 from __future__ import annotations
 
-from data.loader import load_budgets
+from data import loader
+
+
+def _typed_error(error: Exception, stage: str) -> dict[str, str]:
+    """Build a consistent typed error payload for tool responses."""
+    return {
+        "type": type(error).__name__,
+        "message": str(error),
+        "stage": stage,
+    }
 
 
 def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, object]:
@@ -27,18 +36,42 @@ def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, obje
         In data-lookup error cases, includes an additional "error" key.
     """
     try:
-        budgets = load_budgets()
-    except (FileNotFoundError, TypeError) as exc:
+        budgets = loader.load_budgets()
+    except FileNotFoundError as exc:
         return {
             "signal": "escalate",
-            "summary": "Budget data unavailable; escalate for manual review.",
+            "summary": "Budget data file missing; escalate for manual review.",
             "details": {
                 "cost_center_id": cost_center_id,
                 "remaining_budget": 0.0,
                 "total_amount": float(requested_amount),
                 "overage": float(requested_amount),
             },
-            "error": str(exc),
+            "error": _typed_error(exc, "data_load"),
+        }
+    except KeyError as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Budget data missing required fields; escalate for manual review.",
+            "details": {
+                "cost_center_id": cost_center_id,
+                "remaining_budget": 0.0,
+                "total_amount": float(requested_amount),
+                "overage": float(requested_amount),
+            },
+            "error": _typed_error(exc, "data_shape"),
+        }
+    except Exception as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Unexpected budget check failure; escalate for manual review.",
+            "details": {
+                "cost_center_id": cost_center_id,
+                "remaining_budget": 0.0,
+                "total_amount": float(requested_amount),
+                "overage": float(requested_amount),
+            },
+            "error": _typed_error(exc, "unexpected"),
         }
 
     record = next(
@@ -56,12 +89,41 @@ def check_budget(cost_center_id: str, requested_amount: float) -> dict[str, obje
                 "total_amount": float(requested_amount),
                 "overage": float(requested_amount),
             },
-            "error": f"Unknown cost_center_id: {cost_center_id}",
+            "error": {
+                "type": "ReferenceDataError",
+                "message": f"Unknown cost_center_id: {cost_center_id}",
+                "stage": "lookup",
+            },
         }
 
-    remaining = float(record.get("remaining", 0.0))
-    amount = float(requested_amount)
-    overage = max(0.0, round(amount - remaining, 2))
+    try:
+        remaining = float(record["remaining"])
+        amount = float(requested_amount)
+        overage = max(0.0, round(amount - remaining, 2))
+    except KeyError as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Budget record missing required fields; escalate for manual review.",
+            "details": {
+                "cost_center_id": cost_center_id,
+                "remaining_budget": 0.0,
+                "total_amount": float(requested_amount),
+                "overage": float(requested_amount),
+            },
+            "error": _typed_error(exc, "data_shape"),
+        }
+    except Exception as exc:
+        return {
+            "signal": "escalate",
+            "summary": "Unexpected budget check failure; escalate for manual review.",
+            "details": {
+                "cost_center_id": cost_center_id,
+                "remaining_budget": 0.0,
+                "total_amount": float(requested_amount),
+                "overage": float(requested_amount),
+            },
+            "error": _typed_error(exc, "unexpected"),
+        }
 
     if overage > 0:
         return {

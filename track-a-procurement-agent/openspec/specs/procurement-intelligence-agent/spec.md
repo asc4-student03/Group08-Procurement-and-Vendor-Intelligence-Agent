@@ -27,7 +27,7 @@ Model validation MUST include the following numeric constraints:
 
 #### Scenario: Request violates schema
 - **WHEN** a request is missing required fields or has invalid field types
-- **THEN** the system rejects processing and returns a recommendation rationale that identifies input validation failure
+- **THEN** the system returns an `escalate` recommendation with rationale that identifies input validation failure
 
 ### Requirement: Produce Structured Recommendation Output
 The system SHALL produce recommendations using the `ProcurementRecommendation` Pydantic v2 model with `decision` constrained to `approve`, `deny`, or `escalate` and a non-empty `rationale`.
@@ -53,7 +53,7 @@ Each tool contract MUST be defined with name, inputs, return shape, and error be
 	- Return shape: `{ "signal": "approve|deny|escalate", "summary": string, "details": object }`
 	- Error behavior: MUST raise a typed tool error or return a structured failure payload captured by the agent rationale path.
 - `check_vendor_duplication`
-	- Inputs: `vendor_id`, `vendor_name`, `category`, `total_amount`
+	- Inputs: `vendor_id`, `category`, `total_amount`
 	- Return shape: `{ "signal": "approve|deny|escalate", "summary": string, "details": object }`
 	- Error behavior: MUST raise a typed tool error or return a structured failure payload captured by the agent rationale path.
 - `check_policy_compliance`
@@ -61,7 +61,7 @@ Each tool contract MUST be defined with name, inputs, return shape, and error be
 	- Return shape: `{ "signal": "approve|deny|escalate", "summary": string, "details": object }`
 	- Error behavior: MUST raise a typed tool error or return a structured failure payload captured by the agent rationale path.
 - `assess_risk`
-	- Inputs: `vendor_id`, `category`, `total_amount`, `cost_center_id`
+	- Inputs: `vendor_id`
 	- Return shape: `{ "signal": "approve|deny|escalate", "summary": string, "details": object }`
 	- Error behavior: MUST raise a typed tool error or return a structured failure payload captured by the agent rationale path.
 
