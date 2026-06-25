@@ -15,7 +15,7 @@ and the test suite is passing.
 
 | Field | Value |
 |-------|-------|
-| Last stable commit hash | [run: `git log --oneline -1`] |
+| Last stable commit hash | [`da74d91 (HEAD -> Feature_Veeresh4, origin/Feature_Veeresh4) [US-005] Upgrade RAPID peer review rating to Pass after remediation and full test validation`] |
 | Last stable tag / version | [fill in if tagged; otherwise use commit hash] |
 | Date of last stable state | |
 | Verified by | |
@@ -129,9 +129,9 @@ pipeline, list the consumers here and notify them before reverting:
 
 | Role | Name | Contact |
 |------|------|---------|
-| Release Manager / Decision Maker | | |
-| Technical Lead | | |
-| Instructor / Supervisor | | |
+| Release Manager / Decision Maker |Manohar Ailoni |manohar.ailoni@accenture.com |
+| Technical Lead | Dilip Kumar Shimhadri|shimhadri.dilip@accenture.com |
+| Instructor / Supervisor |Kumara Swamy Bommina/Veeresh Kumar Kondapeta |bommina.kumara.swamy@accenture.com/veeresh.k.kondapeta@accenture.com |
 
 ---
 
