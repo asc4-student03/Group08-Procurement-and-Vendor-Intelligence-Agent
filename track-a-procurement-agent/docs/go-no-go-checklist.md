@@ -49,8 +49,8 @@
 
 | Finding | Addressed? | Resolution Summary |
 |---------|------------|-------------------|
-| | | |
-| | | |
+| Criterion 5 (Documentation Adequacy): OpenSpec tool-signature mismatch for `check_policy_compliance` | Yes | Updated `openspec/changes/add-procurement-intelligence-agent/specs/procurement-agent/spec.md` to `check_policy_compliance(request: PurchaseRequest)` so spec matches implementation in `tools/policy_compliance.py`. |
+| Criterion 6 (Behavioral Scope Compliance): required decision-case tests failing due async marker/config dependency | Yes | Updated `tests/test_agent.py` to run required decision-case test synchronously via `asyncio.run(...)`, removed obsolete `asyncio_mode` entry in `pyproject.toml`, and verified with `pytest tests/ -v --tb=short --junitxml=docs/test-results.xml` (33 passed, 0 failed). |
 
 ---
 

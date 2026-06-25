@@ -33,7 +33,7 @@ finding a single issue.
 Required tools:
 - `check_budget(cost_center_id: str, requested_amount: float)`
 - `check_vendor_duplication(vendor_id: str, category: str, amount: float)`
-- `check_policy_compliance(vendor_id: str, category: str, amount: float, quantity: int)`
+- `check_policy_compliance(request: PurchaseRequest)`
 - `assess_risk(vendor_id: str)`
 
 #### Scenario: Evaluation runs complete tool suite
