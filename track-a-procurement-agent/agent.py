@@ -106,10 +106,7 @@ def _fallback_decision(tool_outputs: dict[str, dict[str, Any]]) -> str:
     policy_signal = str(tool_outputs["check_policy_compliance"].get("signal", "approve"))
     risk_level = str(tool_outputs["assess_risk"].get("risk_level", "low"))
 
-    if "escalate" in {budget_signal, duplication_signal, policy_signal} or risk_level in {
-        "critical",
-        "high",
-    }:
+    if "escalate" in {budget_signal, duplication_signal, policy_signal} or risk_level == "critical":
         return "escalate"
     if "deny" in {budget_signal, duplication_signal, policy_signal}:
         return "deny"

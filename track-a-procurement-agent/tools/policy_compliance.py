@@ -129,6 +129,17 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
                 "forced_decision": "escalate",
             }
         )
+    elif request.total_amount >= (pol_003_threshold * 0.95):
+        violations.append(
+            {
+                "policy_id": "POL-003",
+                "violated_rule": (
+                    "Amount is within 5% of director approval threshold and requires "
+                    "director-level escalation review."
+                ),
+                "forced_decision": "escalate",
+            }
+        )
 
     # POL-004: Prohibited category catering
     if request.category == "catering":
