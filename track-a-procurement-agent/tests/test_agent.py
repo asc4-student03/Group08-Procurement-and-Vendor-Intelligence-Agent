@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 from typing import Any
 
@@ -70,8 +71,7 @@ def simulated_agent_run(
     REQUIRED_CASES,
     ids=[case_name for _, case_name, _ in REQUIRED_CASES],
 )
-@pytest.mark.asyncio
-async def test_agent_required_decision_cases(
+def test_agent_required_decision_cases(
     request_id: str,
     case_name: str,
     expected_decision: str,
@@ -81,7 +81,7 @@ async def test_agent_required_decision_cases(
     record = _get_request_record(request_id)
     request = _to_purchase_request(record)
 
-    result = await agent.run(build_request_prompt(request))
+    result = asyncio.run(agent.run(build_request_prompt(request)))
 
     assert case_name
     assert result.data.decision == expected_decision
