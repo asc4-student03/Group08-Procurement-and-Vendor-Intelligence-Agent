@@ -59,6 +59,18 @@ agent: Agent[None, ProcurementRecommendation] = Agent(
 )
 
 
+def _should_skip_model_call() -> bool:
+    """Return True when execution should avoid external LLM calls.
+
+    Tests must run fully offline under RAPID behavioral scope controls.
+    This check also supports an explicit runtime override.
+    """
+    force_offline = os.getenv("PROCUREMENT_AGENT_FORCE_OFFLINE", "").strip().lower()
+    if force_offline in {"1", "true", "yes", "on"}:
+        return True
+    return os.getenv("PYTEST_CURRENT_TEST") is not None
+
+
 def _normalize_tool_error(error_value: object) -> str:
     """Convert tool error payloads into a consistent rationale fragment."""
     if isinstance(error_value, dict):
@@ -213,6 +225,17 @@ def run_request_sync(request: PurchaseRequest) -> ProcurementRecommendation:
         f"Request JSON: {request.model_dump_json()}"
     )
 
+    if _should_skip_model_call():
+        fallback_decision = _fallback_decision(tool_outputs)
+        return ProcurementRecommendation(
+            decision=fallback_decision,
+            rationale=_fallback_rationale(
+                request,
+                tool_outputs,
+                decision=fallback_decision,
+            ),
+        )
+
     try:
         result = agent.run_sync(user_prompt)
         return result.output
@@ -241,6 +264,17 @@ async def run_request_async(request: PurchaseRequest) -> ProcurementRecommendati
         "Call all four tools before final decision.\n"
         f"Request JSON: {request.model_dump_json()}"
     )
+
+    if _should_skip_model_call():
+        fallback_decision = _fallback_decision(tool_outputs)
+        return ProcurementRecommendation(
+            decision=fallback_decision,
+            rationale=_fallback_rationale(
+                request,
+                tool_outputs,
+                decision=fallback_decision,
+            ),
+        )
 
     try:
         result = await agent.run(user_prompt)

@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define the deterministic risk-assessment behavior for vendor compliance and contract status evaluation.
+
+## Requirements
 
 ### Requirement: Return Vendor Risk Profile
 The `assess_risk` tool SHALL accept `vendor_id` and return a risk profile containing compliance flag status, contract status, and computed risk level.

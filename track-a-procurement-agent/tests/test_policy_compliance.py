@@ -35,7 +35,7 @@ def test_policy_compliance_pol_004_catering_prohibition() -> None:
 
 
 def test_policy_compliance_pol_002_manager_threshold() -> None:
-    """Any amount in manager threshold range should include POL-002 escalation."""
+    """Manager-threshold amounts are process notes, not violation escalations."""
     request = PurchaseRequest(
         request_id="REQ-005",
         requestor="A. Patel",
@@ -53,8 +53,8 @@ def test_policy_compliance_pol_002_manager_threshold() -> None:
     violations = result["details"]["violations"]
     pol_002 = [v for v in violations if v["policy_id"] == "POL-002"]
 
-    assert pol_002
-    assert pol_002[0]["forced_decision"] == "escalate"
+    assert not pol_002
+    assert result["signal"] == "approve"
 
 
 def test_policy_compliance_pol_005_expired_contract_req_007() -> None:

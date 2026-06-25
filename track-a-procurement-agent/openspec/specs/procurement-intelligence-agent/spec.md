@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define end-to-end procurement intelligence capability contracts across models, tools, and decision synthesis.
+
+## Requirements
 
 ### Requirement: Validate Purchase Request Input
 The system SHALL validate each incoming purchase request against the `PurchaseRequest` Pydantic v2 model before running any procurement checks.

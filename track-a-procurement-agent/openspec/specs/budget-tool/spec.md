@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define the expected behavior and contract for the budget-check tool used by the procurement agent.
+
+## Requirements
 
 ### Requirement: Evaluate Budget Sufficiency
 The `check_budget` tool SHALL accept `cost_center_id` and `total_amount` and evaluate whether the request fits within the cost center remaining quarterly budget.

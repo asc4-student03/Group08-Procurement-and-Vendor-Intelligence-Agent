@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define conflict-detection behavior for vendor duplication checks and POL-001 deny eligibility context.
+
+## Requirements
 
 ### Requirement: Identify Vendor Duplication Conflicts
 The `check_vendor_duplication` tool SHALL accept `vendor_id` and `category` and determine whether another vendor in the same category has an active contract.

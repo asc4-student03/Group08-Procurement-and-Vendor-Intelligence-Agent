@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define how policy-compliance evaluation must process requests and report violations.
+
+## Requirements
 
 ### Requirement: Evaluate Request Against All Policies
 The `check_policy_compliance` tool SHALL evaluate each purchase request against all eight policies defined in `mock_data/policies.json`.

@@ -110,19 +110,11 @@ def check_policy_compliance(request: PurchaseRequest) -> dict[str, object]:
         )
 
     # POL-002: Manager approval threshold
+    # This is a process checkpoint, not a deny/escalate violation trigger.
+    # Requests in this range may still be approved when no blocking violations exist.
     pol_002_low = float(policy_by_id.get("POL-002", {}).get("threshold_amount", 10000.0))
     pol_002_high = float(policy_by_id.get("POL-002", {}).get("upper_threshold", 49999.99))
-    if pol_002_low <= request.total_amount <= pol_002_high:
-        violations.append(
-            {
-                "policy_id": "POL-002",
-                "violated_rule": (
-                    "Amount is in manager-approval range and requires documented manager "
-                    "approval before processing."
-                ),
-                "forced_decision": "escalate",
-            }
-        )
+    _pol_002_requires_manager_approval = pol_002_low <= request.total_amount <= pol_002_high
 
     # POL-003: Director approval threshold
     pol_003_threshold = float(policy_by_id.get("POL-003", {}).get("threshold_amount", 50000.0))

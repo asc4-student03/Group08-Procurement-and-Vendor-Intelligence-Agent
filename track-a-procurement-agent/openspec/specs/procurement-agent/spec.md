@@ -1,4 +1,7 @@
-## ADDED Requirements
+## Purpose
+Define orchestration behavior, output contract, and decision precedence for the procurement decision agent.
+
+## Requirements
 
 ### Requirement: Agent Input And Output Contracts
 The system SHALL define `agent.py` to accept a `PurchaseRequest` input and return a `ProcurementRecommendation` output.
