@@ -15,10 +15,10 @@ and the test suite is passing.
 
 | Field | Value |
 |-------|-------|
-| Last stable commit hash | [run: `git log --oneline -1`] |
-| Last stable tag / version | [fill in if tagged; otherwise use commit hash] |
-| Date of last stable state | |
-| Verified by | |
+| Last stable commit hash | 21193fc |
+| Last stable tag / version | 21193fc |
+| Date of last stable state | 2026-06-25 |
+| Verified by | asc4-student03 |
 
 ---
 
@@ -129,9 +129,9 @@ pipeline, list the consumers here and notify them before reverting:
 
 | Role | Name | Contact |
 |------|------|---------|
-| Release Manager / Decision Maker | | |
-| Technical Lead | | |
-| Instructor / Supervisor | | |
+| Release Manager / Decision Maker | asc4-student03 | asc4-student03@labs.webagesolutions.com |
+| Technical Lead | asc4-student03 | asc4-student03@labs.webagesolutions.com |
+| Instructor / Supervisor | TBA (Course Instructor) | To be provided by team |
 
 ---
 
